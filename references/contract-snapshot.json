@@ -1,0 +1,27 @@
+{
+  "package_version": "0.2.0",
+  "schema_version": "0.2.0",
+  "snapshot_date": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "distribution_role": "Read-only copy of the authoritative core schema; no proposed CR applied",
+  "sources": {
+    "schemas/core.schema.json": {
+      "project_relative_path": "schemas/core.schema.json",
+      "sha256": "d8d2c1f55a6d3156b072011dc1bb3a72778b27d395a8c0d1973f2dc3626af845"
+    },
+    "specs/02-DATA-CONTRACT.md": {
+      "project_relative_path": "specs/02-DATA-CONTRACT.md",
+      "sha256": "4163a9632b83696fa32babc7b77763704da3d9ee1351c27c7f447e5def92cb59"
+    },
+    "specs/03-CONVERSION-SKILL.md": {
+      "project_relative_path": "specs/03-CONVERSION-SKILL.md",
+      "sha256": "745993bb92b20b9204c6ff5de6c685b3243b1f0d5939ff4b2da28e32a4a12b88"
+    }
+  },
+  "distributed_files": {
+    "core.schema.json": {
+      "source": "schemas/core.schema.json",
+      "sha256": "d8d2c1f55a6d3156b072011dc1bb3a72778b27d395a8c0d1973f2dc3626af845"
+    }
+  }
+}

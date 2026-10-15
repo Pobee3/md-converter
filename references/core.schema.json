@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ireader/core-0.2.0.schema.json",
+  "title": "iReader 0.2.0 核心结构与合成夹具 schema",
+  "description": "核心结构；通过 $defs 中的指定类型校验。manifest 是合成夹具，production_manifest 是生产发布清单。跨文件和发布语义见共享契约。",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/page_map"
+    },
+    {
+      "$ref": "#/$defs/source_map"
+    },
+    {
+      "$ref": "#/$defs/alignment"
+    },
+    {
+      "$ref": "#/$defs/blocks"
+    },
+    {
+      "$ref": "#/$defs/toc"
+    },
+    {
+      "$ref": "#/$defs/notes"
+    },
+    {
+      "$ref": "#/$defs/manifest"
+    },
+    {
+      "$ref": "#/$defs/production_manifest"
+    }
+  ],
+  "$defs": {
+    "label": {
+      "type": "object",
+      "properties": {
+        "edition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sequence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label_raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scheme": {
+          "enum": [
+            "roman",
+            "arabic",
+            "other"
+          ]
+        },
+        "numeric_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "approximate",
+            "verified"
+          ]
+        }
+      },
+      "required": [
+        "edition_id",
+        "sequence_id",
+        "label_raw",
+        "scheme",
+        "numeric_value",
+        "evidence",
+        "verification"
+      ],
+      "additionalProperties": false
+    },
+    "marker": {
+      "type": "object",
+      "properties": {
+        "marker_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "edition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label_raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "approximate",
+            "verified"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "marker_id",
+        "edition_id",
+        "label_raw",
+        "source_id",
+        "offset",
+        "verification",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "page": {
+      "type": "object",
+      "properties": {
+        "pdf_page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "viewer_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label_state": {
+          "enum": [
+            "known",
+            "absent",
+            "unknown"
+          ]
+        },
+        "printed_labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          },
+          "minItems": 0
+        },
+        "edition_markers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/marker"
+          },
+          "minItems": 0
+        },
+        "logical_order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rotation": {
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ]
+        }
+      },
+      "required": [
+        "pdf_page",
+        "viewer_label",
+        "label_state",
+        "printed_labels",
+        "edition_markers",
+        "logical_order",
+        "rotation"
+      ],
+      "additionalProperties": false
+    },
+    "page_map": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "map_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "const": "pdf"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "map_revision",
+        "source_type",
+        "pages"
+      ],
+      "additionalProperties": false
+    },
+    "fragment": {
+      "type": "object",
+      "properties": {
+        "fragment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "enum": [
+            "pdf",
+            "epub"
+          ]
+        },
+        "pdf_page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "approximate",
+            "verified"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spine_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "href": {
+          "type": "string",
+          "minLength": 1
+        },
+        "element_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cfi": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "fragment_id",
+        "source_type",
+        "range",
+        "verification",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "source_type": {
+                  "const": "pdf"
+                }
+              },
+              "required": [
+                "pdf_page",
+                "bbox"
+              ]
+            },
+            {
+              "properties": {
+                "source_type": {
+                  "const": "epub"
+                }
+              },
+              "required": [
+                "spine_index",
+                "href",
+                "element_id",
+                "cfi"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "mapping": {
+      "type": "object",
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chapter_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fragments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fragment"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "source_id",
+        "chapter_id",
+        "fragments"
+      ],
+      "additionalProperties": false
+    },
+    "source_map": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "map_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mapping"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "map_revision",
+        "entries"
+      ],
+      "additionalProperties": false
+    },
+    "unit": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "translation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "state": {
+          "enum": [
+            "translated",
+            "pending",
+            "skipped"
+          ]
+        },
+        "skip_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "approximate",
+            "verified"
+          ]
+        }
+      },
+      "required": [
+        "unit_id",
+        "source_ids",
+        "translation_ids",
+        "state",
+        "skip_reason",
+        "verification"
+      ],
+      "additionalProperties": false
+    },
+    "alignment": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "translation_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage_basis": {
+          "enum": [
+            "whole_document",
+            "selected_scope"
+          ]
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unit"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "translation_revision",
+        "coverage_basis",
+        "units"
+      ],
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chapter_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "enum": [
+            "paragraph",
+            "heading",
+            "figure",
+            "table",
+            "equation",
+            "list",
+            "caption"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "translatable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "block_id",
+        "source_id",
+        "chapter_id",
+        "order",
+        "kind",
+        "text",
+        "translatable"
+      ],
+      "additionalProperties": false
+    },
+    "blocks": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "blocks"
+      ],
+      "additionalProperties": false
+    },
+    "chapter": {
+      "type": "object",
+      "properties": {
+        "chapter_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "first_block_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "last_block_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "printed_page_hint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "chapter_id",
+        "parent_id",
+        "order",
+        "title",
+        "first_block_id",
+        "last_block_id",
+        "printed_page_hint"
+      ],
+      "additionalProperties": false
+    },
+    "toc": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chapters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/chapter"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "chapters"
+      ],
+      "additionalProperties": false
+    },
+    "note": {
+      "type": "object",
+      "properties": {
+        "note_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "enum": [
+            "original_document",
+            "ai_added",
+            "human_added"
+          ]
+        },
+        "responsibility": {
+          "enum": [
+            "author",
+            "original_translator",
+            "editor",
+            "critical_apparatus",
+            "other",
+            "unknown",
+            "ai"
+          ]
+        },
+        "placement": {
+          "enum": [
+            "footnote",
+            "endnote",
+            "inline",
+            "marginal"
+          ]
+        },
+        "original_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agent_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "apparatus_kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "edition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "approximate",
+            "verified"
+          ]
+        },
+        "generated_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_state": {
+          "enum": [
+            "unreviewed",
+            "reviewed",
+            "synthetic"
+          ]
+        }
+      },
+      "required": [
+        "note_id",
+        "origin",
+        "responsibility",
+        "placement",
+        "original_label",
+        "agent_name",
+        "agent_role",
+        "apparatus_kind",
+        "edition_id",
+        "text",
+        "references",
+        "evidence",
+        "verification"
+      ],
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/note"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "is_synthetic": {
+          "const": true
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "translation_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "enum": [
+            "pdf",
+            "epub",
+            "md"
+          ]
+        },
+        "source_snapshot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "status": {
+          "const": "fixture_only"
+        },
+        "notice": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "title",
+        "is_synthetic",
+        "source_revision",
+        "translation_revision",
+        "source_type",
+        "source_snapshot",
+        "files",
+        "status",
+        "notice"
+      ],
+      "additionalProperties": false
+    },
+    "file_record": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "source_record": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "pdf",
+            "epub",
+            "md"
+          ]
+        },
+        "snapshot": {
+          "$ref": "#/$defs/file_record"
+        },
+        "provider": {
+          "enum": [
+            "local",
+            "zotero"
+          ]
+        },
+        "item_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attachment_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "library_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "snapshot",
+        "provider",
+        "item_key",
+        "attachment_key",
+        "library_id"
+      ],
+      "additionalProperties": false
+    },
+    "production_manifest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.2.0"
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source_record"
+        },
+        "active_translation_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "map_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/file_record"
+          }
+        },
+        "publication_state": {
+          "enum": [
+            "draft",
+            "published"
+          ]
+        },
+        "conversion_status": {
+          "enum": [
+            "not_started",
+            "queued",
+            "running",
+            "validating",
+            "completed",
+            "needs_attention",
+            "interrupted",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "quality_state": {
+          "enum": [
+            "draft",
+            "needs_review",
+            "reviewed"
+          ]
+        },
+        "report": {
+          "$ref": "#/$defs/file_record"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "source_revision",
+        "source",
+        "active_translation_revision",
+        "map_revision",
+        "files",
+        "publication_state",
+        "conversion_status",
+        "quality_state",
+        "report",
+        "extensions"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

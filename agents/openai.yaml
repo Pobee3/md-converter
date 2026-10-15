@@ -1,0 +1,4 @@
+interface:
+  display_name: "md-converter 文档转换"
+  short_description: "将 PDF 和 EPUB 转为可追溯原文，保留段落身份、来源映射与检查证据"
+  default_prompt: "使用 $md-converter 转换文献；开始时问我保存位置和是否继续翻译，核对目录页码与范围后交付分类原文包，若选择翻译则接续翻译 Skill。"
