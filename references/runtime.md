@@ -28,7 +28,8 @@
 - `pdf_geometry.py`：内部函数可从未旋转 PDF 的文字层取得数字区域，结合已核验页边带与相邻文本生成行号疑点建议。重复匹配拒绝，正文同号数字不因数值相同就删除；不自动采纳建议，不自动估计版心，文字层可能错序或缺失，仍需原页核验。
 - `validate` / `locate`：检查核心格式、版本、范围覆盖、原件指纹、原生节点或引擎片段，按块/注释 ID 反查来源。支持任务目录与独立草稿包。
 - 当前任务门禁：`validate` 对 PDF/EPUB 检查此次合并对应的检查点、每批产物指纹与目标覆盖；中断任务即使留有旧 `source.md` 也不能通过或另存。独立草稿包复核包内文件/原件/原始解析结果和范围，不把草稿标为已校读的正式 release。
-- `save`：校验后保存独立草稿；默认 `--layout flat` 为旧版平铺目录，`--layout split` 在新成品文件夹中生成 `阅读原文/`、完整的 `来源包/`、顶层 `书名-原件.pdf`（EPUB 为 `.epub`）、`文件说明.md` 和私有 `文献索引.json`。顶层原件与来源包内快照逐字节核对；索引记录相对路径和指纹，供未来网页工作台读取，不冒充正式 manifest。阅读副本及图片资源可直接打开；翻译脚本应以 `来源包/` 为来源目录。拒绝覆盖已有目录，保存中断保留失败标识，不称完成。
+- `save`：校验后保存独立草稿；默认 `--layout flat` 为旧版平铺目录，`--layout split` 在新成品文件夹中生成 `阅读原文/`、完整的 `来源包/`、顶层原件、说明、私有索引，以及默认的轻量增强型 MD 与交接索引。拆分布局按 `--formats md,word,pdf,epub`（默认 `md`）生成 `阅读原文/标注版/`；仅明确选择 Word/PDF 时才排版并保存目录、随机中间正文、原注三页预览。顶层原件与来源包内快照逐字节核对；翻译脚本仍以 `来源包/` 为来源目录。拒绝覆盖已有目录，保存中断保留失败标识，不称完成。
+- `export-reading`：从已保存的来源包另存标注版原文，不改规范 `source.md`；可用 `--source-id-file` 仅输出已确定的来源 ID 范围。MD 使用内联 HTML 两端对齐；Word/PDF/EPUB 支持已映射的普通正文和标题；非 MD 格式从 `toc.json` 生成可点击目录，Word/PDF 的标题和阅读页码、EPUB 的章节及可用原书页码均链接到正文锚点。图表及行内图片等尚需逐项核对的复杂视觉块在 Word/PDF/EPUB 导出前会明确报错，不能静默丢失；MD 保留这些块的原始标记和资源。Word 需要 `python-docx`、LibreOffice 与 `pypdfium2`；PDF 需要 ReportLab、`pypdfium2` 和可嵌入的 CJK 衬线字体。执行前应通过 Codex workspace dependencies 查找可用运行时；导出后检查预览与实际文件。详见 [标注版导出](reading-export.md)。
 - `service-status`：分别报告 Skill 专用服务、外部共享服务和指定 MinerU 解释器的真实可用状态；没有解释器路径时 CLI 能力为未知，不伪报可用。
 - `start-service`：只在需要独立 PDF 服务时，在单独回环端口以已有 MinerU 解释器启动专用 API；持久记录进程 PID、创建时刻、完整命令和随机所有权标记。启动失败会核对并清理本次子进程；不能确认清理时保留记录和错误供处理，不接管已有端口。
 - `exit` / `stop-service`：文档锁空闲时把进行中的检查点记为 interrupted，保留 PDF job 句柄供续查。默认不停止任何服务；显式 `--stop-owned-service` 仅在严格核验进程身份及完整 job 列表没有 queued/running 后，对专用服务发送 SIGTERM。iread 共享服务无所有权记录，不会被停止；若正在转换、身份不符或无法确认任务空闲则拒绝。
@@ -45,7 +46,8 @@
 "$python" "$skill/scripts/md_converter.py" convert-epub "$epub" --work-dir "$work" --document-id "$document_id" --task-id "$task_id" --engine-result "$raw_flash"
 "$python" "$skill/scripts/md_converter.py" validate "$task_dir"
 "$python" "$skill/scripts/md_converter.py" locate "$task_dir" "$block_id"
-"$python" "$skill/scripts/md_converter.py" save "$task_dir" "$new_destination_folder" --name "$display_name" --layout split
+"$python" "$skill/scripts/md_converter.py" save "$task_dir" "$new_destination_folder" --name "$display_name" --layout split --formats md,word,pdf,epub --soffice "$soffice"
+"$python" "$skill/scripts/md_converter.py" export-reading "$saved_bundle" "$new_reading_folder" --name "$display_name" --formats md
 "$python" "$skill/scripts/md_converter.py" service-status --work-dir "$work" --runtime "$mineru_python" --shared-service http://127.0.0.1:16580
 "$python" "$skill/scripts/md_converter.py" exit --task "$task_dir"
 ```

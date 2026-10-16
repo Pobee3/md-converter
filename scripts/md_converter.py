@@ -3,6 +3,8 @@
 import argparse
 import json
 import shutil
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from common import ConversionError, WorkLock, atomic, confined, digest, load, token
@@ -252,6 +254,27 @@ def save_split_bundle(task,destination,name):
         raise
 
 
+def export_reading(source_bundle, output_dir, name, formats='md', source_id_file=None, soffice=None):
+    cmd=[sys.executable,str(Path(__file__).with_name('export_reading.py')),
+         str(source_bundle),str(output_dir),'--name',name,'--formats',formats]
+    if source_id_file:cmd.extend(['--source-id-file',str(source_id_file)])
+    if soffice:cmd.extend(['--soffice',str(soffice)])
+    proc=subprocess.run(cmd,capture_output=True,text=True)
+    require(proc.returncode==0,'Reading export failed: '+(proc.stderr or proc.stdout).strip())
+    return json.loads(proc.stdout)
+
+
+def export_translation_input(source_bundle, destination, name, original_file):
+    output=Path(destination)/'翻译输入'/'原文增强.md'
+    cmd=[sys.executable,str(Path(__file__).with_name('export_translation_md.py')),
+         str(source_bundle),str(output),'--title',name,
+         '--original',str(original_file),
+         '--library-index',str(Path(destination)/'文献索引.json')]
+    proc=subprocess.run(cmd,capture_output=True,text=True)
+    require(proc.returncode==0,'Translation handoff export failed: '+(proc.stderr or proc.stdout).strip())
+    return json.loads(proc.stdout)
+
+
 def main():
     p=argparse.ArgumentParser(description='md-converter: native candidates, evidence and exact source lookup')
     sub=p.add_subparsers(dest='command',required=True)
@@ -272,7 +295,9 @@ def main():
     c=sub.add_parser('validate');c.add_argument('task',type=Path)
     c=sub.add_parser('locate');c.add_argument('task',type=Path);c.add_argument('identifier');c.add_argument('--start',type=int,default=0);c.add_argument('--end',type=int)
     c=sub.add_parser('save');c.add_argument('task',type=Path);c.add_argument('destination',type=Path);c.add_argument('--name',required=True)
-    c.add_argument('--layout',choices=['flat','split'],default='flat')
+    c.add_argument('--layout',choices=['flat','split'],default='flat');c.add_argument('--formats',default='md');c.add_argument('--soffice')
+    c=sub.add_parser('export-reading');c.add_argument('source_bundle',type=Path);c.add_argument('output_dir',type=Path)
+    c.add_argument('--name',required=True);c.add_argument('--formats',default='md');c.add_argument('--source-id-file',type=Path);c.add_argument('--soffice')
     c=sub.add_parser('service-status');c.add_argument('--work-dir',type=Path,required=True);c.add_argument('--shared-service');c.add_argument('--runtime',type=Path)
     c=sub.add_parser('start-service');c.add_argument('--work-dir',type=Path,required=True);c.add_argument('--runtime',type=Path,required=True);c.add_argument('--port',type=int)
     c=sub.add_parser('stop-service');c.add_argument('--work-dir',type=Path,required=True)
@@ -299,7 +324,31 @@ def main():
             result=adapt(a.source,a.raw,a.work_dir,a.document_id,a.task_id,load(a.review) if a.review else None)
         elif a.command=='validate':result=validate_task(a.task)
         elif a.command=='locate':result=lookup(a.task,a.identifier,a.start,a.end)
-        elif a.command=='save':result=save_split_bundle(a.task,a.destination,a.name) if a.layout=='split' else save_bundle(a.task,a.destination,a.name)
+        elif a.command=='save':
+            if a.layout=='split':
+                result=save_split_bundle(a.task,a.destination,a.name)
+                try:
+                    result['translation_input']=export_translation_input(Path(result['saved'])/'来源包',Path(result['saved']),a.name,result['original_file'])
+                    result['annotated_reading']=export_reading(Path(result['saved'])/'来源包',Path(result['saved'])/'阅读原文'/'标注版',a.name,a.formats,soffice=a.soffice)
+                except BaseException:
+                    atomic(Path(result['saved'])/'SAVE-INCOMPLETE.txt','A requested derivative export failed; source package remains saved, but delivery is incomplete.\n')
+                    raise
+                index_path=Path(result['saved'])/'文献索引.json'
+                index=load(index_path)
+                index['paths']['annotated_reading']={key:Path(value).relative_to(result['saved']).as_posix()
+                                                   for key,value in result['annotated_reading']['outputs'].items()}
+                atomic(index_path,index)
+                with (Path(result['saved'])/'文件说明.md').open('a',encoding='utf-8') as guide:
+                    guide.write('\n## 标注版原文\n\n`阅读原文/标注版/` 是按来源映射生成的阅读版，含页码、段落标记和两端对齐。'
+                                'Word/PDF 导出时，`抽样预览/` 保存目录、正文、注释的三页预览和 `导出记录.json`。'
+                                '它是派生文件，不改变 `来源包/source.md`。\n')
+                    guide.write('\n## 翻译交接\n\n`翻译输入/原文增强.md` 是轻量可读交接稿；'
+                                '同目录交接索引指向 `来源包/` 中的精确映射。'
+                                '仅在明确选择翻译时才开始试译，未选择时不创建译文文件。\n')
+            else:
+                require(a.formats=='md','Additional reading formats require --layout split')
+                result=save_bundle(a.task,a.destination,a.name)
+        elif a.command=='export-reading':result=export_reading(a.source_bundle,a.output_dir,a.name,a.formats,a.source_id_file,a.soffice)
         elif a.command=='service-status':
             from service_lifecycle import status
             result=status(a.work_dir,a.shared_service,a.runtime)
